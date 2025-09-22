@@ -1,90 +1,117 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>AR Gerak Parabola</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/2.2.1/aframe/build/aframe-ar.js"></script>
-    <style>
-      #resetBtn {
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        z-index: 999;
-        padding: 10px 15px;
-        background: #2196F3;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        font-size: 16px;
-      }
-    </style>
-  </head>
-  <body style="margin: 0; overflow: hidden;">
-    <button id="resetBtn">Reset</button>
+<head>
+  <meta charset="utf-8">
+  <title>AR Gerak Parabola Interaktif</title>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/2.2.1/aframe/build/aframe-ar.js"></script>
+  <style>
+    body { margin:0; overflow:hidden; font-family: sans-serif; }
+    #controls {
+      position: fixed;
+      top: 10px; left: 10px;
+      background: rgba(255,255,255,0.9);
+      padding: 10px; border-radius: 8px;
+      z-index: 999;
+      width: 220px;
+    }
+    #controls label { display:block; margin-top:5px; font-size:14px; }
+    #controls input { width: 100%; }
+  </style>
+</head>
+<body>
 
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; smooth: true;">
-      <!-- Marker HIRO -->
-      <a-marker preset="hiro" emitevents="true">
-        <!-- Bola merah -->
-        <a-sphere id="ball" radius="0.1" color="red" position="0 0 0"></a-sphere>
+<div id="controls">
+  <label>Kecepatan awal (m/s): <span id="v0Val">3</span></label>
+  <input type="range" id="v0" min="1" max="10" step="0.1" value="3">
 
-        <!-- Lintasan biru -->
-        <a-entity id="trajectory"></a-entity>
+  <label>Sudut peluncuran (°): <span id="angleVal">60</span></label>
+  <input type="range" id="angle" min="10" max="80" step="1" value="60">
 
-        <!-- Tambahkan cahaya agar objek terlihat jelas -->
-        <a-entity light="type: directional; color: #ffffff; intensity: 1" position="0 1 0"></a-entity>
-      </a-marker>
+  <label>Gravitasi (m/s²): <span id="gVal">9.8</span></label>
+  <input type="range" id="g" min="1" max="20" step="0.1" value="9.8">
 
-      <a-entity camera></a-entity>
-    </a-scene>
+  <button id="resetBtn">Reset Simulasi</button>
+  
+  <p id="stats"></p>
+</div>
 
-    <script>
-      // Parameter parabola
-      let v0 = 3;         // kecepatan awal
-      let angle = 60;     // derajat
-      let g = 9.8;        // gravitasi
-      let t = 0;          // waktu
-      let dt = 0.05;      // step waktu
+<a-scene embedded arjs="sourceType: webcam; debugUIEnabled:false; smooth:true;">
+  <a-marker preset="hiro" emitevents="true">
+    <a-sphere id="ball" radius="0.1" color="red" position="0 0 0"></a-sphere>
+    <a-entity id="trajectory"></a-entity>
+    <a-entity light="type: directional; color: #ffffff; intensity: 1" position="0 1 0"></a-entity>
+  </a-marker>
+  <a-entity camera></a-entity>
+</a-scene>
 
-      const ball = document.getElementById('ball');
-      const trajectory = document.getElementById('trajectory');
-      const resetBtn = document.getElementById('resetBtn');
+<script>
+  // Parameter default
+  let v0 = 3, angle = 60, g = 9.8;
+  let t = 0, dt = 0.05;
 
-      // Konversi sudut
-      let rad = angle * Math.PI / 180;
-      let vx = v0 * Math.cos(rad);
-      let vy = v0 * Math.sin(rad);
+  const ball = document.getElementById('ball');
+  const trajectory = document.getElementById('trajectory');
+  const resetBtn = document.getElementById('resetBtn');
+  const stats = document.getElementById('stats');
 
-      function resetSimulation() {
-        t = 0;
-        trajectory.innerHTML = '';
-        ball.setAttribute('position', {x: 0, y: 0, z: 0});
-      }
+  const v0Slider = document.getElementById('v0');
+  const angleSlider = document.getElementById('angle');
+  const gSlider = document.getElementById('g');
+  const v0Val = document.getElementById('v0Val');
+  const angleVal = document.getElementById('angleVal');
+  const gVal = document.getElementById('gVal');
 
-      resetBtn.addEventListener('click', resetSimulation);
+  function resetSimulation() {
+    t = 0;
+    trajectory.innerHTML = '';
+    ball.setAttribute('position', {x:0, y:0, z:0});
+    updateStats();
+  }
 
-      function update() {
-        t += dt;
-        let x = vx * t;
-        let y = vy * t - 0.5 * g * t * t;
+  resetBtn.addEventListener('click', resetSimulation);
 
-        if (y < 0) {
-          t = 0; // tetap restart di marker
-          return;
-        }
+  // Update parameter dari slider
+  v0Slider.addEventListener('input', () => { v0 = parseFloat(v0Slider.value); v0Val.innerText = v0; resetSimulation(); });
+  angleSlider.addEventListener('input', () => { angle = parseFloat(angleSlider.value); angleVal.innerText = angle; resetSimulation(); });
+  gSlider.addEventListener('input', () => { g = parseFloat(gSlider.value); gVal.innerText = g; resetSimulation(); });
 
-        ball.setAttribute('position', {x: x, y: y, z: 0});
+  function updateStats() {
+    let rad = angle * Math.PI / 180;
+    let t_max = (2 * v0 * Math.sin(rad)) / g;
+    let x_max = v0 * Math.cos(rad) * t_max;
+    let y_max = (v0 * Math.sin(rad))**2 / (2*g);
+    stats.innerHTML = `
+      Tinggi maksimum: ${y_max.toFixed(2)} m<br>
+      Jangkauan: ${x_max.toFixed(2)} m
+    `;
+  }
 
-        // Tambahkan titik lintasan (biru)
-        let dot = document.createElement('a-sphere');
-        dot.setAttribute('radius', 0.02);
-        dot.setAttribute('color', 'blue');
-        dot.setAttribute('position', {x: x, y: y, z: 0});
-        trajectory.appendChild(dot);
-      }
+  function update() {
+    t += dt;
+    let rad = angle * Math.PI / 180;
+    let vx = v0 * Math.cos(rad);
+    let vy = v0 * Math.sin(rad);
+    let x = vx * t;
+    let y = vy * t - 0.5 * g * t * t;
 
-      setInterval(update, dt * 1000);
-    </script>
-  </body>
+    if (y < 0) { t=0; return; }
+
+    ball.setAttribute('position', {x: x, y: y, z:0});
+
+    // Titik lintasan biru
+    let dot = document.createElement('a-sphere');
+    dot.setAttribute('radius',0.02);
+    dot.setAttribute('color','blue');
+    dot.setAttribute('position',{x:x,y:y,z:0});
+    trajectory.appendChild(dot);
+
+    updateStats();
+  }
+
+  setInterval(update, dt*1000);
+  resetSimulation();
+</script>
+
+</body>
 </html>
