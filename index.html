@@ -1,259 +1,67 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html>
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2575.4">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
-  </style>
-</head>
-<body>
-<p class="p1">&lt;!doctype html&gt;</p>
-<p class="p1">&lt;html lang="id"&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta charset="utf-8" /&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width,initial-scale=1" /&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;title&gt;AR Gerak Parabola — Marker Tap Anchor (No External Libs)&lt;/title&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta name="description" content="Simulasi gerak parabola yang menempel pada posisi marker dengan cara tap pada video (tanpa A-Frame/AR.js). Cocok saat CDN/Policy memblokir library eksternal." /&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;style&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>:root{--bg:#071022;--panel:#0b1724;--accent:#06b6d4;--muted:#9fb9c9}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>html,body{height:100%;margin:0;background:var(--bg);font-family:Inter,system-ui,Arial;color:#e6f7ff}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>#app{display:flex;height:100vh}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>/* Camera area */</p>
-<p class="p1"><span class="Apple-converted-space">    </span>#camWrap{position:relative;flex:1;background:#000;overflow:hidden}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>video#cam{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);min-width:100%;min-height:100%;object-fit:cover}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>canvas#overlay{position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>/* Panel */</p>
-<p class="p1"><span class="Apple-converted-space">    </span>#panel{width:380px;background:linear-gradient(180deg,#071826,#081226);padding:14px;border-left:1px solid rgba(255,255,255,0.03);box-shadow:-12px 0 30px rgba(0,0,0,0.6);overflow:auto}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>h1{margin:0 0 8px 0;font-size:16px}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>label{display:block;font-size:13px;color:var(--muted);margin:6px 0}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>input[type=range]{width:100%}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>.row{display:flex;gap:8px;align-items:center}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>button{background:var(--accent);border:none;padding:8px 10px;border-radius:6px;color:#042024;cursor:pointer;font-weight:700}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>button.secondary{background:#9ca3af}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>.log{font-family:monospace;font-size:12px;background:#071122;padding:8px;border-radius:6px;color:#9ddcf0;margin-top:10px;min-height:72px;max-height:180px;overflow:auto}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>.note{font-size:13px;color:#062024;background:#fef3c7;padding:8px;border-radius:6px;margin-top:10px}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>.stats{margin-top:8px;font-size:13px;color:var(--muted)}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>.presets button{background:#e2e8f0;color:#042024;padding:6px 8px;border-radius:6px}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>a.small{color:var(--muted);font-size:12px}</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="app"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="camWrap"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;video id="cam" autoplay playsinline muted&gt;&lt;/video&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;canvas id="overlay"&gt;&lt;/canvas&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="panel"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;h1&gt;AR Gerak Parabola — Marker Tap Anchor&lt;/h1&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="note"&gt;Catatan: ini menggunakan kamera + canvas overlay. Jika CDN / CSP memblokir library eksternal (A-Frame / AR.js), gunakan metode ini: letakkan marker HIRO di permukaan, lalu &lt;strong&gt;tap&lt;/strong&gt; pada titik marker di video untuk menempatkan origin simulasi.&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;label&gt;Kecepatan awal (m/s)</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;input id="v0" type="range" min="0.5" max="30" step="0.1" value="6"&gt;&lt;div class="small"&gt;Nilai: &lt;span id="v0val"&gt;6.0&lt;/span&gt; m/s&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/label&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;label&gt;Sudut (°)</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;input id="angle" type="range" min="1" max="89" step="1" value="45"&gt;&lt;div class="small"&gt;Nilai: &lt;span id="angval"&gt;45&lt;/span&gt;°&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/label&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;label&gt;Gravitasi (m/s²)</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;input id="g" type="range" min="0.1" max="20" step="0.01" value="9.81"&gt;&lt;div class="small"&gt;Nilai: &lt;span id="gval"&gt;9.81&lt;/span&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/label&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;label&gt;Skala (px per meter)</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;input id="scale" type="range" min="40" max="360" step="1" value="140"&gt;&lt;div class="small"&gt;Skala: &lt;span id="scaleval"&gt;140&lt;/span&gt; px/m&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/label&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div style="display:flex;gap:8px;margin-top:8px"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button id="launch"&gt;Luncurkan&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button id="reset" class="secondary"&gt;Reset&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button id="anchorBtn" class="secondary"&gt;Set Anchor (tap video)&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="presets"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button data-v="6" data-a="45" data-g="9.81"&gt;6 m/s, 45°&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button data-v="8" data-a="30" data-g="9.81"&gt;8 m/s, 30°&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button data-v="10" data-a="60" data-g="9.81"&gt;10 m/s, 60°&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button data-v="2" data-a="80" data-g="9.81"&gt;2 m/s, 80°&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button data-v="20" data-a="5" data-g="9.81"&gt;20 m/s, 5°&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div style="display:flex;gap:8px;margin-top:8px"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button id="runAll"&gt;Run all presets (test cases)&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="stats" id="stats"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>Waktu terbang: &lt;span id="tflight"&gt;-&lt;/span&gt; s • Jangkauan: &lt;span id="range"&gt;-&lt;/span&gt; m • Tinggi maks: &lt;span id="hmax"&gt;-&lt;/span&gt; m</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="log" id="log"&gt;Log: menunggu kamera...&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div style="margin-top:8px"&gt;&lt;a class="small" href="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" target="_blank"&gt;Download HIRO marker&lt;/a&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>(function(){</p>
-<p class="p1"><span class="Apple-converted-space">      </span>// DOM</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var video = document.getElementById('cam');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var canvas = document.getElementById('overlay');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var ctx = canvas.getContext('2d');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var v0Slider = document.getElementById('v0');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var angleSlider = document.getElementById('angle');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var gSlider = document.getElementById('g');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var scaleSlider = document.getElementById('scale');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var v0val = document.getElementById('v0val');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var angval = document.getElementById('angval');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var gval = document.getElementById('gval');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var scaleval = document.getElementById('scaleval');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var launchBtn = document.getElementById('launch');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var resetBtn = document.getElementById('reset');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var anchorBtn = document.getElementById('anchorBtn');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var logEl = document.getElementById('log');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var statsEl = document.getElementById('stats');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var tflightEl = document.getElementById('tflight');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var rangeEl = document.getElementById('range');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var hmaxEl = document.getElementById('hmax');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var runAllBtn = document.getElementById('runAll');</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>// state</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var anchorMode = false;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var anchor = {x:0.5, y:0.8}; // normalized (0..1)</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var metersToPx = parseFloat(scaleSlider.value);</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var animating = false;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var rafId = null;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var trajCache = null;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>function log(){</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var args = Array.prototype.slice.call(arguments);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var now = new Date().toLocaleTimeString();</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var line = '['+now+'] ' + args.join(' ');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>logEl.textContent = line + '\n' + logEl.textContent;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>try{ console.log.apply(console, args); }catch(e){}</p>
-<p class="p1"><span class="Apple-converted-space">      </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>function updateLabels(){ v0val.textContent = parseFloat(v0Slider.value).toFixed(1); angval.textContent = angleSlider.value; gval.textContent = parseFloat(gSlider.value).toFixed(2); scaleval.textContent = parseInt(scaleSlider.value,10); }</p>
-<p class="p1"><span class="Apple-converted-space">      </span>v0Slider.addEventListener('input', updateLabels); angleSlider.addEventListener('input', updateLabels); gSlider.addEventListener('input', updateLabels); scaleSlider.addEventListener('input', function(){ metersToPx = parseFloat(scaleSlider.value); updateLabels(); drawPreview(); });</p>
-<p class="p1"><span class="Apple-converted-space">      </span>updateLabels();</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>function resizeCanvas(){</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var rect = video.getBoundingClientRect();</p>
-<p class="p1"><span class="Apple-converted-space">        </span>canvas.width = Math.round(rect.width);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>canvas.height = Math.round(rect.height);</p>
-<p class="p1"><span class="Apple-converted-space">      </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>function startCamera(){</p>
-<p class="p1"><span class="Apple-converted-space">        </span>if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ log('getUserMedia tidak didukung.'); showNotice('Kamera tidak tersedia pada perangkat ini.'); drawPreview(); return; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>navigator.mediaDevices.getUserMedia({video:{ facingMode: { ideal: 'environment' } }, audio:false}).then(function(stream){</p>
-<p class="p1"><span class="Apple-converted-space">          </span>video.srcObject = stream; video.onloadedmetadata = function(){ try{ video.play(); }catch(e){} setTimeout(function(){ resizeCanvas(); drawPreview(); }, 200); window.addEventListener('resize', function(){ resizeCanvas(); drawPreview(); }); log('Kamera aktif. Tap "Set Anchor" lalu ketuk pada marker di video.'); };</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}).catch(function(err){ log('Gagal akses kamera:', err); showNotice('Akses kamera diblokir atau tidak tersedia.'); drawPreview(); });</p>
-<p class="p1"><span class="Apple-converted-space">      </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>function showNotice(msg){ log('NOTICE:', msg); }</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>// coordinate transforms</p>
-<p class="p1"><span class="Apple-converted-space">      </span>function worldToScreen(p){ // p in meters (x forward, y up)</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var w = canvas.width, h = canvas.height;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var ax = anchor.x * w, ay = anchor.y * h;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var sx = ax + p.x * metersToPx;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var sy = ay - p.y * metersToPx;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>return {x: sx, y: sy};</p>
-<p class="p1"><span class="Apple-converted-space">      </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>function computeTrajectory(v0m, angleDeg, gVal, steps){</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var theta = angleDeg * Math.PI/180.0;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var vx = v0m * Math.cos(theta);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var vy = v0m * Math.sin(theta);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var tFlight = Math.max(0.05, (2*vy)/gVal);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var pts = [];</p>
-<p class="p1"><span class="Apple-converted-space">        </span>steps = steps || 120;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>for (var i=0;i&lt;=steps;i++){</p>
-<p class="p1"><span class="Apple-converted-space">          </span>var t = (i/steps) * tFlight;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>var x = vx * t;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>var y = vy * t - 0.5 * gVal * t * t; if (y &lt; 0) y = 0;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>pts.push({x:x,y:y,t:t});</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>// compute metrics</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var range = vx * tFlight;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var hmax = (vy*vy)/(2*gVal);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>return {pts:pts, tFlight:tFlight, range:range, hmax:hmax};</p>
-<p class="p1"><span class="Apple-converted-space">      </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>function drawPreview(){</p>
-<p class="p1"><span class="Apple-converted-space">        </span>if (!ctx) return;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>resizeCanvas();</p>
-<p class="p1"><span class="Apple-converted-space">        </span>ctx.clearRect(0,0,canvas.width,canvas.height);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>// draw anchor crosshair</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var ax = anchor.x * canvas.width, ay = anchor.y * canvas.height;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(ax,0); ctx.lineTo(ax,canvas.height); ctx.moveTo(0,ay); ctx.lineTo(canvas.width,ay); ctx.stroke();</p>
-<p class="p1"><span class="Apple-converted-space">        </span>ctx.fillStyle = 'rgba(96,165,250,0.95)'; ctx.beginPath(); ctx.arc(ax,ay,6,0,Math.PI*2); ctx.fill();</p>
-<p class="p1"><span class="Apple-converted-space">        </span>// draw predicted path based on current sliders</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var v0m = parseFloat(v0Slider.value), ang = parseFloat(angleSlider.value), g = parseFloat(gSlider.value);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>var traj = computeTrajectory(v0m, ang, g, 80);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>trajCache = traj; // cache for launch</p>
-<p class="p1"><span class="Apple-converted-space">        </span>// draw points</p>
-<p class="p1"><span class="Apple-converted-space">        </span>for (var i=0;i&lt;traj.pts.length;i++){</p>
-<p class="p1"><span class="Apple-converted-space">          </span>var p = worldToScreen(traj.pts[i]);</p>
-<p class="p1"><span class="Apple-converted-space">          </span>ctx.fillStyle = (i===0? 'rgba(249,115,22,1)' : 'rgba(96,165,250,0.8)');</p>
-<p class="p1"><span class="Apple-converted-space">          </span>ctx.beginPath(); ctx.arc(p.x, p.y, i===0?5:2.5,0,Math.PI*2); ctx.fill();</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>// show metrics</p>
-<p class="p1"><span class="Apple-converted-space">        </span>tflightEl.textContent = traj.tFlight.toFixed(2);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>rangeEl.textContent = traj.range.toFixed(2);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>hmaxEl.textContent = traj.hmax.toFixed(2);</p>
-<p class="p1"><span class="Apple-converted-space">      </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>// anchor placement</p>
-<p class="p1"><span class="Apple-converted-space">      </span>anchorBtn.addEventListener('click', function(){ anchorMode = true; log('Anchor mode: tap pada video untuk menempatkan origin.'); anchorBtn.textContent = 'Tap pada video...'; });</p>
-<p class="p1"><span class="Apple-converted-space">      </span>canvas.addEventListener('click', function(e){ if (!anchorMode) return; var rect = canvas.getBoundingClientRect(); var x = e.clientX - rect.left; var y = e.clientY - rect.top; anchor.x = x / rect.width; anchor.y = y / rect.height; anchorMode = false; anchorBtn.textContent = 'Set Anchor (tap video)'; log('Anchor ditetapkan:', anchor); drawPreview(); });</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>// animation</p>
-<p class="p1"><span class="Apple-converted-space">      </span>function launch(){ if (animating) return; var v0m = parseFloat(v0Slider.value), ang = parseFloat(angleSlider.value), g = parseFloat(gSlider.value); var traj = computeTrajectory(v0m, ang, g, 300); trajCache = traj; var tStart = performance.now(); animating = true; log('Luncurkan: v0=' + v0m + ' angle=' + ang + ' g=' + g);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>function step(){ if (!animating) return; var now = performance.now(); var t = (now - tStart) / 1000.0; if (t &gt; traj.tFlight){ animating = false; log('Simulasi selesai'); drawPreview(); return; } // draw overlay frame</p>
-<p class="p1"><span class="Apple-converted-space">          </span>ctx.clearRect(0,0,canvas.width,canvas.height);</p>
-<p class="p1"><span class="Apple-converted-space">          </span>// anchor crosshair</p>
-<p class="p1"><span class="Apple-converted-space">          </span>var ax = anchor.x * canvas.width, ay = anchor.y * canvas.height;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.beginPath(); ctx.moveTo(ax,0); ctx.lineTo(ax,canvas.height); ctx.moveTo(0,ay); ctx.lineTo(canvas.width,ay); ctx.stroke(); ctx.fillStyle='rgba(96,165,250,0.95)'; ctx.beginPath(); ctx.arc(ax,ay,6,0,Math.PI*2); ctx.fill();</p>
-<p class="p1"><span class="Apple-converted-space">          </span>// draw past points up to t</p>
-<p class="p1"><span class="Apple-converted-space">          </span>for (var i=0;i&lt;traj.pts.length;i++){ var pt = traj.pts[i]; if (pt.t &lt;= t){ var sc = worldToScreen(pt); ctx.fillStyle = 'rgba(96,165,250,' + (0.6*(1 - pt.t/traj.tFlight)) + ')'; ctx.beginPath(); ctx.arc(sc.x, sc.y, 3, 0, Math.PI*2); ctx.fill(); } }</p>
-<p class="p1"><span class="Apple-converted-space">          </span>// draw projectile</p>
-<p class="p1"><span class="Apple-converted-space">          </span>var theta = ang * Math.PI/180.0; var vx = v0m*Math.cos(theta); var vy = v0m*Math.sin(theta); var x = vx * t; var y = vy * t - 0.5 * g * t * t; if (y &lt; 0) y = 0; var scr = worldToScreen({x:x,y:y}); ctx.fillStyle = 'rgba(249,115,22,0.98)'; ctx.beginPath(); ctx.arc(scr.x, scr.y, 8, 0, Math.PI*2); ctx.fill();</p>
-<p class="p1"><span class="Apple-converted-space">          </span>rafId = requestAnimationFrame(step);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>rafId = requestAnimationFrame(step);</p>
-<p class="p1"><span class="Apple-converted-space">      </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>function reset(){ if (rafId) cancelAnimationFrame(rafId); animating = false; trajCache = null; drawPreview(); log('Direset.'); }</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>launchBtn.addEventListener('click', launch); resetBtn.addEventListener('click', reset);</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>// presets buttons</p>
-<p class="p1"><span class="Apple-converted-space">      </span>var presetBtns = document.querySelectorAll('.presets button');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>Array.prototype.forEach.call(presetBtns, function(b){ b.addEventListener('click', function(){ v0Slider.value = b.getAttribute('data-v'); angleSlider.value = b.getAttribute('data-a'); gSlider.value = b.getAttribute('data-g'); updateLabels(); drawPreview(); log('Preset dipilih:', b.textContent); }); });</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>// run all presets sequentially as test cases</p>
-<p class="p1"><span class="Apple-converted-space">      </span>runAllBtn.addEventListener('click', function(){ var btns = Array.prototype.slice.call(presetBtns); var i = 0; function runNext(){ if (i &gt;= btns.length) { log('Semua preset selesai.'); return; } var b = btns[i]; b.click(); setTimeout(function(){ launch(); i++; setTimeout(function(){ reset(); setTimeout(runNext, 700); }, 1800); }, 300); } runNext(); });</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>// initial preview</p>
-<p class="p1"><span class="Apple-converted-space">      </span>function init(){ resizeCanvas(); drawPreview(); startCamera(); }</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>function startCamera(){ if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ log('getUserMedia tidak didukung pada perangkat ini.'); drawPreview(); showNotice('Kamera tidak tersedia. Anda masih dapat melihat preview lintasan di canvas.'); return; } navigator.mediaDevices.getUserMedia({video:{ facingMode: { ideal: 'environment' } }, audio:false}).then(function(stream){ video.srcObject = stream; video.onloadedmetadata = function(){ try{ video.play(); }catch(e){} setTimeout(function(){ resizeCanvas(); drawPreview(); }, 250); window.addEventListener('resize', function(){ resizeCanvas(); drawPreview(); }); log('Kamera aktif. Tap "Set Anchor" lalu ketuk pada marker di video untuk menempelkan simulasi.'); }; }).catch(function(err){ log('Gagal mengakses kamera:', err); drawPreview(); showNotice('Akses kamera ditolak atau tidak tersedia.'); }); }</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>// safety: if opened with file:// warn</p>
-<p class="p1"><span class="Apple-converted-space">      </span>try{ if (location.protocol === 'file:'){ showNotice('DIBUKA VIA file:// — beberapa browser membatasi getUserMedia dan CDN. Untuk hasil terbaik jalankan lewat server lokal, contoh: python -m http.server 8000'); } }catch(e){}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">      </span>// start</p>
-<p class="p1"><span class="Apple-converted-space">      </span>init();</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>})();</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/script&gt;</p>
-<p class="p1">&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
-</body>
+  <head>
+    <meta charset="utf-8">
+    <title>AR Gerak Parabola</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/2.2.1/aframe/build/aframe-ar.js"></script>
+  </head>
+  <body style="margin: 0; overflow: hidden;">
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+      <!-- Gunakan marker HIRO -->
+      <a-marker preset="hiro">
+        <!-- Bola merah -->
+        <a-sphere id="ball" radius="0.1" color="red" position="0 0 0"></a-sphere>
+
+        <!-- Lintasan -->
+        <a-entity id="trajectory"></a-entity>
+      </a-marker>
+
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+      // Parameter parabola
+      let v0 = 3;         // kecepatan awal
+      let angle = 60;     // derajat
+      let g = 9.8;        // gravitasi
+      let t = 0;          // waktu
+      let dt = 0.05;      // step waktu
+
+      const ball = document.getElementById('ball');
+      const trajectory = document.getElementById('trajectory');
+
+      // Konversi sudut
+      let rad = angle * Math.PI / 180;
+      let vx = v0 * Math.cos(rad);
+      let vy = v0 * Math.sin(rad);
+
+      function resetSimulation() {
+        t = 0;
+        trajectory.innerHTML = '';
+      }
+
+      function update() {
+        t += dt;
+        let x = vx * t;
+        let y = vy * t - 0.5 * g * t * t;
+
+        if (y < 0) {
+          resetSimulation();
+          return;
+        }
+
+        ball.setAttribute('position', {x: x, y: y, z: 0});
+
+        // Tambahkan titik lintasan (biru)
+        let dot = document.createElement('a-sphere');
+        dot.setAttribute('radius', 0.02);
+        dot.setAttribute('color', 'blue');
+        dot.setAttribute('position', {x: x, y: y, z: 0});
+        trajectory.appendChild(dot);
+      }
+
+      setInterval(update, dt * 1000);
+    </script>
+  </body>
 </html>
