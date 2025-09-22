@@ -2,11 +2,10 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>AR Gerak Parabola Interaktif</title>
-  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/2.2.1/aframe/build/aframe-ar.js"></script>
+  <title>AR Parabola Markerless</title>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
-    body { margin:0; overflow:hidden; font-family: sans-serif; }
+    body { margin:0; font-family:sans-serif; }
     #controls {
       position: fixed;
       top: 10px; left: 10px;
@@ -16,7 +15,7 @@
       width: 220px;
     }
     #controls label { display:block; margin-top:5px; font-size:14px; }
-    #controls input { width: 100%; }
+    #controls input { width:100%; }
   </style>
 </head>
 <body>
@@ -36,25 +35,24 @@
   <p id="stats"></p>
 </div>
 
-<a-scene embedded arjs="sourceType: webcam; debugUIEnabled:false; smooth:true;">
-  <a-marker preset="hiro" emitevents="true">
-    <a-sphere id="ball" radius="0.1" color="red" position="0 0 0"></a-sphere>
-    <a-entity id="trajectory"></a-entity>
-    <a-entity light="type: directional; color: #ffffff; intensity: 1" position="0 1 0"></a-entity>
-  </a-marker>
-  <a-entity camera></a-entity>
-</a-scene>
+<!-- Model-viewer AR -->
+<model-viewer id="modelViewer"
+  src="ball.glb"
+  ar
+  ar-modes="webxr scene-viewer quick-look"
+  camera-controls
+  auto-rotate
+  shadow-intensity="1"
+  style="width:100vw; height:100vh;">
+</model-viewer>
 
 <script>
   // Parameter default
   let v0 = 3, angle = 60, g = 9.8;
   let t = 0, dt = 0.05;
 
-  const ball = document.getElementById('ball');
-  const trajectory = document.getElementById('trajectory');
   const resetBtn = document.getElementById('resetBtn');
   const stats = document.getElementById('stats');
-
   const v0Slider = document.getElementById('v0');
   const angleSlider = document.getElementById('angle');
   const gSlider = document.getElementById('g');
@@ -64,48 +62,32 @@
 
   function resetSimulation() {
     t = 0;
-    trajectory.innerHTML = '';
-    ball.setAttribute('position', {x:0, y:0, z:0});
     updateStats();
   }
 
   resetBtn.addEventListener('click', resetSimulation);
 
-  // Update parameter dari slider
-  v0Slider.addEventListener('input', () => { v0 = parseFloat(v0Slider.value); v0Val.innerText = v0; resetSimulation(); });
-  angleSlider.addEventListener('input', () => { angle = parseFloat(angleSlider.value); angleVal.innerText = angle; resetSimulation(); });
-  gSlider.addEventListener('input', () => { g = parseFloat(gSlider.value); gVal.innerText = g; resetSimulation(); });
+  v0Slider.addEventListener('input', () => { v0=parseFloat(v0Slider.value); v0Val.innerText=v0; resetSimulation(); });
+  angleSlider.addEventListener('input', () => { angle=parseFloat(angleSlider.value); angleVal.innerText=angle; resetSimulation(); });
+  gSlider.addEventListener('input', () => { g=parseFloat(gSlider.value); gVal.innerText=g; resetSimulation(); });
 
   function updateStats() {
     let rad = angle * Math.PI / 180;
-    let t_max = (2 * v0 * Math.sin(rad)) / g;
-    let x_max = v0 * Math.cos(rad) * t_max;
-    let y_max = (v0 * Math.sin(rad))**2 / (2*g);
-    stats.innerHTML = `
-      Tinggi maksimum: ${y_max.toFixed(2)} m<br>
-      Jangkauan: ${x_max.toFixed(2)} m
-    `;
+    let t_max = (2*v0*Math.sin(rad))/g;
+    let x_max = v0*Math.cos(rad)*t_max;
+    let y_max = (v0*Math.sin(rad))**2/(2*g);
+    stats.innerHTML = `Tinggi maksimum: ${y_max.toFixed(2)} m<br>Jangkauan: ${x_max.toFixed(2)} m`;
   }
 
   function update() {
     t += dt;
-    let rad = angle * Math.PI / 180;
-    let vx = v0 * Math.cos(rad);
-    let vy = v0 * Math.sin(rad);
-    let x = vx * t;
-    let y = vy * t - 0.5 * g * t * t;
-
-    if (y < 0) { t=0; return; }
-
-    ball.setAttribute('position', {x: x, y: y, z:0});
-
-    // Titik lintasan biru
-    let dot = document.createElement('a-sphere');
-    dot.setAttribute('radius',0.02);
-    dot.setAttribute('color','blue');
-    dot.setAttribute('position',{x:x,y:y,z:0});
-    trajectory.appendChild(dot);
-
+    let rad = angle*Math.PI/180;
+    let x = v0*Math.cos(rad)*t;
+    let y = v0*Math.sin(rad)*t - 0.5*g*t*t;
+    if(y<0){ t=0; return; }
+    // Update posisi model-viewer (markerless AR) menggunakan translate
+    const model = document.querySelector('model-viewer');
+    model.style.transform = `translate3d(${x}px, ${-y*50}px, 0)`; // perkiraan scaling visual
     updateStats();
   }
 
