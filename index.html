@@ -2,10 +2,12 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>AR Parabola Markerless</title>
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <title>Markerless AR Parabola</title>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.3.2/aframe/build/aframe-ar-nft.js"></script>
   <style>
-    body { margin:0; font-family:sans-serif; }
+    body { margin:0; overflow:hidden; font-family:sans-serif; }
     #controls {
       position: fixed;
       top: 10px; left: 10px;
@@ -31,69 +33,78 @@
   <input type="range" id="g" min="1" max="20" step="0.1" value="9.8">
 
   <button id="resetBtn">Reset Simulasi</button>
-  
   <p id="stats"></p>
 </div>
 
-<!-- Model-viewer AR -->
-<model-viewer id="modelViewer"
-  src="ball.glb"
-  ar
-  ar-modes="webxr scene-viewer quick-look"
-  camera-controls
-  auto-rotate
-  shadow-intensity="1"
-  style="width:100vw; height:100vh;">
-</model-viewer>
+<a-scene
+  embedded
+  vr-mode-ui="enabled: false"
+  renderer="antialias: true; colorManagement: true;"
+  arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled:false;">
+  
+  <!-- Markerless plane -->
+  <a-entity id="ball" geometry="primitive: sphere; radius: 0.05" material="color: red" position="0 0 -1"></a-entity>
+  
+  <a-entity camera look-controls></a-entity>
+  <a-light type="directional" intensity="1" position="0 1 0"></a-light>
+</a-scene>
 
 <script>
-  // Parameter default
   let v0 = 3, angle = 60, g = 9.8;
   let t = 0, dt = 0.05;
-
-  const resetBtn = document.getElementById('resetBtn');
+  let originSet = false;
+  const ball = document.getElementById('ball');
   const stats = document.getElementById('stats');
+
   const v0Slider = document.getElementById('v0');
   const angleSlider = document.getElementById('angle');
   const gSlider = document.getElementById('g');
   const v0Val = document.getElementById('v0Val');
   const angleVal = document.getElementById('angleVal');
   const gVal = document.getElementById('gVal');
-
-  function resetSimulation() {
-    t = 0;
-    updateStats();
-  }
-
-  resetBtn.addEventListener('click', resetSimulation);
-
-  v0Slider.addEventListener('input', () => { v0=parseFloat(v0Slider.value); v0Val.innerText=v0; resetSimulation(); });
-  angleSlider.addEventListener('input', () => { angle=parseFloat(angleSlider.value); angleVal.innerText=angle; resetSimulation(); });
-  gSlider.addEventListener('input', () => { g=parseFloat(gSlider.value); gVal.innerText=g; resetSimulation(); });
+  const resetBtn = document.getElementById('resetBtn');
 
   function updateStats() {
-    let rad = angle * Math.PI / 180;
-    let t_max = (2*v0*Math.sin(rad))/g;
-    let x_max = v0*Math.cos(rad)*t_max;
-    let y_max = (v0*Math.sin(rad))**2/(2*g);
+    const rad = angle * Math.PI/180;
+    const t_max = (2*v0*Math.sin(rad))/g;
+    const x_max = v0*Math.cos(rad)*t_max;
+    const y_max = (v0*Math.sin(rad))**2/(2*g);
     stats.innerHTML = `Tinggi maksimum: ${y_max.toFixed(2)} m<br>Jangkauan: ${x_max.toFixed(2)} m`;
   }
 
-  function update() {
-    t += dt;
-    let rad = angle*Math.PI/180;
-    let x = v0*Math.cos(rad)*t;
-    let y = v0*Math.sin(rad)*t - 0.5*g*t*t;
-    if(y<0){ t=0; return; }
-    // Update posisi model-viewer (markerless AR) menggunakan translate
-    const model = document.querySelector('model-viewer');
-    model.style.transform = `translate3d(${x}px, ${-y*50}px, 0)`; // perkiraan scaling visual
-    updateStats();
+  resetBtn.addEventListener('click', ()=>{ t=0; originSet=false; updateStats(); });
+
+  v0Slider.addEventListener('input', ()=>{ v0=parseFloat(v0Slider.value); v0Val.innerText=v0; t=0; originSet=false; });
+  angleSlider.addEventListener('input', ()=>{ angle=parseFloat(angleSlider.value); angleVal.innerText=angle; t=0; originSet=false; });
+  gSlider.addEventListener('input', ()=>{ g=parseFloat(gSlider.value); gVal.innerText=g; t=0; originSet=false; });
+
+  // Tap to set origin
+  document.body.addEventListener('click', (evt)=>{
+    if(!originSet){
+      const camera = document.querySelector('[camera]');
+      const camPos = camera.object3D.position;
+      ball.setAttribute('position', {x: camPos.x, y: camPos.y, z: camPos.z-1});
+      originSet = true;
+      t = 0;
+    }
+  });
+
+  function animate(){
+    requestAnimationFrame(animate);
+    if(originSet){
+      t += dt;
+      const rad = angle*Math.PI/180;
+      const vx = v0*Math.cos(rad);
+      const vy = v0*Math.sin(rad);
+      let pos = ball.object3D.position;
+      pos.x += vx*dt;
+      pos.y = vy*t - 0.5*g*t*t + pos.y; // sederhana
+      if(pos.y < 0) { t=0; originSet=false; return; }
+      ball.object3D.position.set(pos.x, pos.y, pos.z);
+      updateStats();
+    }
   }
-
-  setInterval(update, dt*1000);
-  resetSimulation();
+  animate();
 </script>
-
 </body>
 </html>
