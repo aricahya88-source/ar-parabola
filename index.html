@@ -2,10 +2,10 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Markerless AR Parabola</title>
-  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.3.2/aframe/build/aframe-ar-nft.js"></script>
+  <title>Markerless AR Parabola Realistis</title>
+  <script src="https://aframe.io/releases/1.4.1/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar-nft.js"></script>
   <style>
     body { margin:0; overflow:hidden; font-family:sans-serif; }
     #controls {
@@ -43,10 +43,11 @@
   arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled:false;">
   
   <!-- Markerless plane -->
-  <a-entity id="ball" geometry="primitive: sphere; radius: 0.05" material="color: red" position="0 0 -1"></a-entity>
-  
+  <a-entity id="floor" geometry="primitive: plane; width: 10; height: 10" material="visible: false" rotation="-90 0 0" position="0 0 0"></a-entity>
+  <a-sphere id="ball" radius="0.05" color="red" position="0 0.05 0"></a-sphere>
+
   <a-entity camera look-controls></a-entity>
-  <a-light type="directional" intensity="1" position="0 1 0"></a-light>
+  <a-light type="directional" intensity="1" position="0 5 0"></a-light>
 </a-scene>
 
 <script>
@@ -55,6 +56,7 @@
   let originSet = false;
   const ball = document.getElementById('ball');
   const stats = document.getElementById('stats');
+  const floor = document.getElementById('floor');
 
   const v0Slider = document.getElementById('v0');
   const angleSlider = document.getElementById('angle');
@@ -73,17 +75,16 @@
   }
 
   resetBtn.addEventListener('click', ()=>{ t=0; originSet=false; updateStats(); });
-
   v0Slider.addEventListener('input', ()=>{ v0=parseFloat(v0Slider.value); v0Val.innerText=v0; t=0; originSet=false; });
   angleSlider.addEventListener('input', ()=>{ angle=parseFloat(angleSlider.value); angleVal.innerText=angle; t=0; originSet=false; });
   gSlider.addEventListener('input', ()=>{ g=parseFloat(gSlider.value); gVal.innerText=g; t=0; originSet=false; });
 
-  // Tap to set origin
+  // Tap untuk menetapkan titik awal di lantai
   document.body.addEventListener('click', (evt)=>{
     if(!originSet){
       const camera = document.querySelector('[camera]');
       const camPos = camera.object3D.position;
-      ball.setAttribute('position', {x: camPos.x, y: camPos.y, z: camPos.z-1});
+      ball.object3D.position.set(camPos.x, 0.05, camPos.z - 0.5); // 0.5 m depan kamera
       originSet = true;
       t = 0;
     }
@@ -96,10 +97,12 @@
       const rad = angle*Math.PI/180;
       const vx = v0*Math.cos(rad);
       const vy = v0*Math.sin(rad);
-      let pos = ball.object3D.position;
+      const pos = ball.object3D.position;
+      // update posisi parabola
       pos.x += vx*dt;
-      pos.y = vy*t - 0.5*g*t*t + pos.y; // sederhana
-      if(pos.y < 0) { t=0; originSet=false; return; }
+      pos.y = vy*t - 0.5*g*t*t + 0.05; // tinggi awal 0.05 m
+      // berhenti jika menyentuh lantai
+      if(pos.y < 0.05){ t=0; originSet=false; pos.y=0.05; }
       ball.object3D.position.set(pos.x, pos.y, pos.z);
       updateStats();
     }
