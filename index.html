@@ -3,214 +3,409 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Model Atom 3D — AR Markerless (Fixed Imports)</title>
+  <title>LKPD Digital — Kinematika (GLB, GLBB, Gerak Parabola)</title>
   <style>
-    :root{--bg:#0f1724;--panel:#071427;--accent:#7dd3fc;--text:#e6eef8}
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,#051025 0%,#081827 100%);color:var(--text);font-family:Inter,system-ui,Arial}
-    #ui{position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.45);padding:10px;border-radius:8px;z-index:5}
-    button{background:var(--accent);color:#00121a;border:none;padding:8px 10px;border-radius:6px;cursor:pointer}
-    #msg{position:absolute;left:12px;bottom:12px;background:rgba(0,0,0,0.45);padding:8px;border-radius:6px;font-size:13px}
-    canvas{display:block}
+    :root{--bg:#0f1724;--card:#0b1220;--text:#e6eef8;--accent:#7dd3fc}
+    body{font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Arial; margin:0; background:linear-gradient(180deg,#071029 0%, #081827 100%); color:var(--text)}
+    header{padding:12px 18px; display:flex; align-items:center; justify-content:space-between}
+    h1{margin:0;font-size:18px}
+    nav{display:flex; gap:8px}
+    .tab{background:rgba(255,255,255,0.03); border-radius:8px; padding:8px 12px; cursor:pointer}
+    .tab.active{background:var(--accent); color:#00121a}
+    .container{padding:16px}
+    .panel{display:none}
+    .panel.active{display:block}
+    .card{background:rgba(255,255,255,0.03); border-radius:12px; padding:14px; box-shadow: 0 6px 18px rgba(2,6,23,0.6); margin-bottom:14px}
+    .controls{display:flex; gap:10px; align-items:center; margin-bottom:10px}
+    label{font-size:13px}
+    input[type=range]{width:200px}
+    canvas{background:#ffffff04; border-radius:8px; display:block}
+    .small{font-size:13px; opacity:0.95}
+    .lkpd{line-height:1.5}
+    .btn{background:var(--accent); color:#00121a; padding:8px 12px; border-radius:8px; border:none; cursor:pointer}
+    pre{white-space:pre-wrap; font-family:inherit}
+    footer{font-size:13px; opacity:0.9; margin-top:8px}
+    @media(min-width:980px){ .layout{display:grid; grid-template-columns:1fr 420px; gap:18px} }
   </style>
 </head>
 <body>
-  <div id="ui">
-    <button id="resetBtn">Reset Kamera</button>
-  </div>
-  <div id="msg">Memuat... jika AR tak tersedia, gunakan mode 3D biasa.</div>
+  <header>
+    <h1>LKPD Digital — Kinematika</h1>
+    <nav id="menu">
+      <div class="tab active" data-target="glb">GLB</div>
+      <div class="tab" data-target="glbb">GLBB</div>
+      <div class="tab" data-target="parabola">Gerak Parabola</div>
+    </nav>
+  </header>
 
-  <!-- Use non-module builds so example files don't import bare 'three' specifiers -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/webxr/ARButton.js"></script>
+  <main class="container">
+
+    <!-- GLB Panel -->
+    <section id="glb" class="panel active">
+      <div class="layout">
+        <section class="card">
+          <h2>Gerak Lurus Beraturan (GLB) — Halaman Praktikum Virtual</h2>
+          <p class="small">Gerak Lurus Beraturan (GLB) adalah gerak benda pada lintasan lurus dengan kecepatan konstan. Persamaan dasar: <strong>s = v × t</strong>, di mana <em>s</em> = perpindahan (m), <em>v</em> = kecepatan (m/s), <em>t</em> = waktu (s). Grafik jarak terhadap waktu untuk GLB adalah garis lurus yang melalui titik asal (jika s(0)=0), gradiennya sama dengan kecepatan.</p>
+
+          <h3>Praktikum Virtual — Tujuan</h3>
+          <ul class="small">
+            <li>Memahami hubungan antara jarak dan waktu pada GLB.</li>
+            <li>Mempelajari bagaimana kecepatan konstan menghasilkan garis lurus pada grafik s(t).</li>
+          </ul>
+
+          <h3>Kontrol Animasi</h3>
+          <div class="controls">
+            <div style="display:flex;gap:8px;align-items:center">
+              <label for="glb-speed">Kecepatan (m/s): </label>
+              <input id="glb-speed" type="range" min="0" max="5" step="0.1" value="1">
+              <span id="glb-speed-val">1.0 m/s</span>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button id="glb-play" class="btn">Play</button>
+            <button id="glb-pause" class="btn">Pause</button>
+            <button id="glb-reset" class="btn">Reset</button>
+          </div>
+
+          <h3>Animasi Gerak (Diagram Kartesius)</h3>
+          <p class="small">Diagram menggunakan skala terkecil 1 m (ditandai setiap grid). Gunakan slider kecepatan untuk mengubah v.</p>
+          <canvas id="glb-scene" width="820" height="240"></canvas>
+
+          <div style="margin-top:12px">
+            <h3>Grafik Lintasan (view dari atas)</h3>
+            <canvas id="glb-path" width="820" height="140"></canvas>
+          </div>
+
+          <div style="margin-top:12px">
+            <h3>Grafik Jarak vs Waktu</h3>
+            <canvas id="glb-chart" width="820" height="180"></canvas>
+          </div>
+
+        </section>
+
+        <aside class="card" style="height:100%; overflow:auto">
+          <h2>LKPD — Lembar Kegiatan Siswa</h2>
+          <div class="lkpd small">
+            <h4>Informasi Singkat</h4>
+            <p>Nama: ____________________  Kelas: ______ Tanggal: ______</p>
+            <h4>Alat dan Bahan</h4>
+            <ul>
+              <li>Komputer atau tablet dengan browser modern</li>
+              <li>Halaman praktikum ini (virtual)</li>
+            </ul>
+
+            <h4>Langkah Kegiatan</h4>
+            <ol>
+              <li>Buka halaman praktikum ini.</li>
+              <li>Atur kecepatan menggunakan slider (0 &ndash; 5 m/s). Catat nilai kecepatan yang digunakan.</li>
+              <li>Tekan <em>Play</em>. Amati pergerakan benda pada diagram kartesius dan perhatikan titik-titik lintasan yang sudah dilalui.</li>
+              <li>Catat beberapa pasangan waktu &amp; jarak yang muncul di grafik jarak-waktu (mis. tiap 1 s atau sesuai pengamatan).</li>
+              <li>Ulangi untuk minimal 3 nilai kecepatan berbeda (mis. 0.5, 1.5, 3.0 m/s).</li>
+            </ol>
+
+            <h4>Format Pencatatan (contoh)</h4>
+            <pre>
+Kecepatan (m/s):  v = ______
+Waktu (s)    Jarak (m)
+0            0
+1            ______
+2            ______
+3            ______
+4            ______
+5            ______
+            </pre>
+
+            <h4>Pertanyaan Analisis</h4>
+            <ol>
+              <li>Apakah grafik jarak terhadap waktu berbentuk garis? Jelaskan hubungannya dengan nilai kecepatan.</li>
+              <li>Jika kecepatan digandakan, bagaimana garis pada grafik berubah? Jelaskan secara kuantitatif.</li>
+              <li>Hitung gradien grafik (slope) menggunakan dua titik yang Anda catat. Apakah sesuai dengan kecepatan yang dipilih?</li>
+            </ol>
+
+            <h4>Refleksi</h4>
+            <p>Tuliskan singkat (2-3 kalimat) apa yang Anda pelajari dari praktikum ini:</p>
+            <p>_____________________________________________________________________</p>
+
+          </div>
+        </aside>
+      </div>
+      <footer class="card">Petunjuk singkat: skala 1 m = 60 px. Titik-titik pada lintasan menunjukkan posisi setiap 0.5 s.</footer>
+    </section>
+
+    <!-- GLBB Panel -->
+    <section id="glbb" class="panel">
+      <div class="layout">
+        <section class="card">
+          <h2>Gerak Lurus Berubah Beraturan (GLBB) — Halaman Praktikum Virtual</h2>
+          <p class="small">Gerak Lurus Berubah Beraturan (GLBB) adalah gerak benda pada lintasan lurus dengan percepatan konstan. Persamaan dasar: <strong>s = v₀t + ½at²</strong> dan <strong>v = v₀ + at</strong>, di mana <em>s</em> = perpindahan (m), <em>v₀</em> = kecepatan awal (m/s), <em>a</em> = percepatan (m/s²), <em>t</em> = waktu (s). Grafik kecepatan terhadap waktu berupa garis lurus, sedangkan grafik jarak terhadap waktu berupa parabola.</p>
+
+          <h3>Praktikum Virtual — Tujuan</h3>
+          <ul class="small">
+            <li>Memahami hubungan antara kecepatan, percepatan, dan perpindahan pada GLBB.</li>
+            <li>Mempelajari bagaimana percepatan konstan memengaruhi bentuk grafik s(t) dan v(t).</li>
+          </ul>
+
+          <h3>Kontrol Animasi</h3>
+          <div class="controls">
+            <div style="display:flex;gap:8px;align-items:center">
+              <label for="glbb-v0">Kecepatan awal (m/s): </label>
+              <input id="glbb-v0" type="range" min="0" max="10" step="0.5" value="2">
+              <span id="glbb-v0-val">2.0 m/s</span>
+            </div>
+          </div>
+
+          <div class="controls">
+            <div style="display:flex;gap:8px;align-items:center">
+              <label for="glbb-acc">Percepatan (m/s²): </label>
+              <input id="glbb-acc" type="range" min="-5" max="5" step="0.2" value="1">
+              <span id="glbb-acc-val">1.0 m/s²</span>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button id="glbb-play" class="btn">Play</button>
+            <button id="glbb-pause" class="btn">Pause</button>
+            <button id="glbb-reset" class="btn">Reset</button>
+          </div>
+
+          <h3>Animasi Gerak (Diagram Kartesius)</h3>
+          <p class="small">Diagram menggunakan skala terkecil 1 m. Objek bergerak sesuai kecepatan awal dan percepatan.</p>
+          <canvas id="glbb-scene" width="820" height="240"></canvas>
+
+          <div style="margin-top:12px">
+            <h3>Grafik Kecepatan vs Waktu</h3>
+            <canvas id="glbb-chart-v" width="820" height="180"></canvas>
+          </div>
+
+          <div style="margin-top:12px">
+            <h3>Grafik Jarak vs Waktu</h3>
+            <canvas id="glbb-chart-s" width="820" height="180"></canvas>
+          </div>
+
+        </section>
+
+        <aside class="card" style="height:100%; overflow:auto">
+          <h2>LKPD — Lembar Kegiatan Siswa</h2>
+          <div class="lkpd small">
+            <h4>Informasi Singkat</h4>
+            <p>Nama: ____________________  Kelas: ______ Tanggal: ______</p>
+            <h4>Alat dan Bahan</h4>
+            <ul>
+              <li>Komputer atau tablet dengan browser modern</li>
+              <li>Halaman praktikum ini (virtual)</li>
+            </ul>
+
+            <h4>Langkah Kegiatan</h4>
+            <ol>
+              <li>Buka halaman praktikum ini.</li>
+              <li>Atur kecepatan awal (<em>v₀</em>) dan percepatan (<em>a</em>) menggunakan slider.</li>
+              <li>Tekan <em>Play</em>. Amati pergerakan benda dan catat perubahan posisi serta kecepatan terhadap waktu.</li>
+              <li>Catat beberapa pasangan waktu &amp; kecepatan serta waktu &amp; jarak dari grafik.</li>
+              <li>Ulangi untuk minimal 3 kombinasi nilai <em>v₀</em> dan <em>a</em>.</li>
+            </ol>
+
+            <h4>Format Pencatatan (contoh)</h4>
+            <pre>
+Kecepatan awal v₀ = ______ m/s, Percepatan a = ______ m/s²
+Waktu (s)    Kecepatan (m/s)    Jarak (m)
+0            ______             0
+1            ______             ______
+2            ______             ______
+3            ______             ______
+4            ______             ______
+5            ______             ______
+            </pre>
+
+            <h4>Pertanyaan Analisis</h4>
+            <ol>
+              <li>Bagaimana bentuk grafik kecepatan terhadap waktu? Apa hubungannya dengan nilai percepatan?</li>
+              <li>Bagaimana bentuk grafik jarak terhadap waktu? Mengapa berbentuk parabola?</li>
+              <li>Jika percepatan bernilai negatif, bagaimana grafik kecepatan dan jarak berubah?</li>
+            </ol>
+
+            <h4>Refleksi</h4>
+            <p>Tuliskan singkat (2-3 kalimat) apa yang Anda pelajari dari praktikum ini:</p>
+            <p>_____________________________________________________________________</p>
+
+          </div>
+        </aside>
+      </div>
+      <footer class="card">Petunjuk singkat: skala 1 m = 60 px. Perubahan posisi dihitung dengan rumus s = v₀t + ½at².</footer>
+    </section>
+
+    <!-- Parabola Panel -->
+    <section id="parabola" class="panel">
+      <div class="layout">
+        <section class="card">
+          <h2>Gerak Parabola — Halaman Praktikum Virtual</h2>
+          <p class="small">Gerak parabola adalah gerak benda yang lintasannya berbentuk parabola akibat adanya komponen horizontal (konstan) dan vertikal (dipengaruhi percepatan gravitasi). Persamaan dasar: <strong>x = v₀ cosθ · t</strong>, <strong>y = v₀ sinθ · t − ½ g t²</strong>, dengan <em>v₀</em> kecepatan awal, θ sudut elevasi, dan g percepatan gravitasi.</p>
+
+          <h3>Praktikum Virtual — Tujuan</h3>
+          <ul class="small">
+            <li>Memahami pengaruh kecepatan awal, sudut, dan gravitasi pada lintasan parabola.</li>
+            <li>Menganalisis hubungan antara komponen horizontal dan vertikal gerak.</li>
+          </ul>
+
+          <h3>Kontrol Animasi</h3>
+          <div class="controls">
+            <div style="display:flex;gap:8px;align-items:center">
+              <label for="par-v0">Kecepatan awal (m/s): </label>
+              <input id="par-v0" type="range" min="0" max="30" step="1" value="15">
+              <span id="par-v0-val">15 m/s</span>
+            </div>
+          </div>
+
+          <div class="controls">
+            <div style="display:flex;gap:8px;align-items:center">
+              <label for="par-angle">Sudut elevasi (°): </label>
+              <input id="par-angle" type="range" min="10" max="80" step="1" value="45">
+              <span id="par-angle-val">45°</span>
+            </div>
+          </div>
+
+          <div class="controls">
+            <div style="display:flex;gap:8px;align-items:center">
+              <label for="par-grav">Gravitasi (m/s²): </label>
+              <input id="par-grav" type="range" min="1" max="20" step="0.5" value="9.8">
+              <span id="par-grav-val">9.8 m/s²</span>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button id="par-play" class="btn">Play</button>
+            <button id="par-pause" class="btn">Pause</button>
+            <button id="par-reset" class="btn">Reset</button>
+          </div>
+
+          <h3>Animasi Gerak (Diagram Kartesius)</h3>
+          <p class="small">Lintasan bola ditampilkan sesuai dengan v₀, θ, dan g yang dipilih. Data t, x, y ditampilkan pada bola.</p>
+          <canvas id="par-scene" width="820" height="320"></canvas>
+
+        </section>
+
+        <aside class="card" style="height:100%; overflow:auto">
+          <h2>LKPD — Lembar Kegiatan Siswa</h2>
+          <div class="lkpd small">
+            <h4>Informasi Singkat</h4>
+            <p>Nama: ____________________  Kelas: ______ Tanggal: ______</p>
+            <h4>Alat dan Bahan</h4>
+            <ul>
+              <li>Komputer atau tablet dengan browser modern</li>
+              <li>Halaman praktikum ini (virtual)</li>
+            </ul>
+
+            <h4>Langkah Kegiatan</h4>
+            <ol>
+              <li>Buka halaman praktikum ini.</li>
+              <li>Atur kecepatan awal (<em>v₀</em>), sudut elevasi (θ), dan gravitasi (<em>g</em>) menggunakan slider.</li>
+              <li>Tekan <em>Play</em>. Amati lintasan bola dan data posisi (t, x, y).</li>
+              <li>Catat nilai maksimum ketinggian (y), jangkauan horizontal (x), dan waktu total.</li>
+              <li>Ulangi untuk minimal 3 kombinasi nilai <em>v₀</em>, θ, dan <em>g</em>.</li>
+            </ol>
+
+            <h4>Format Pencatatan (contoh)</h4>
+            <pre>
+Kecepatan awal v₀ = ______ m/s, Sudut θ = ______ °, Gravitasi g = ______ m/s²
+Tmax = ______ s, Xmax = ______ m, Ymax = ______ m
+            </pre>
+
+            <h4>Pertanyaan Analisis</h4>
+            <ol>
+              <li>Apa hubungan sudut elevasi dengan jangkauan maksimum?</li>
+              <li>Bagaimana perubahan nilai gravitasi memengaruhi lintasan?</li>
+              <li>Jika kecepatan awal diperbesar, apa yang terjadi pada lintasan dan jangkauan?</li>
+            </ol>
+
+            <h4>Refleksi</h4>
+            <p>Tuliskan singkat (2-3 kalimat) apa yang Anda pelajari dari praktikum ini:</p>
+            <p>_____________________________________________________________________</p>
+
+          </div>
+        </aside>
+      </div>
+      <footer class="card">Petunjuk singkat: skala 1 m = 15 px. Persamaan lintasan: x = v₀ cosθ · t, y = v₀ sinθ · t − ½ g t².</footer>
+    </section>
+
+  </main>
 
   <script>
-    // Defensive checks
-    if (typeof THREE === 'undefined') {
-      document.getElementById('msg').textContent = 'Gagal memuat Three.js. Periksa koneksi CDN.';
-      throw new Error('THREE not loaded');
-    }
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(el=>el.addEventListener('click',e=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      const target = e.currentTarget.dataset.target;
+      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+    }));
 
-    // Basic scene setup (same visuals as your model)
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 50);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.xr.enabled = true;
-    document.body.appendChild(renderer.domElement);
+    // Insert the three original scripts for interactivity (GLB, GLBB, Parabola)
+    // GLB
+    (function(){
+      const pxPerMeter = 60;
+      const scene = document.getElementById('glb-scene');
+      const sctx = scene.getContext('2d');
+      const pathCanvas = document.getElementById('glb-path');
+      const pctx = pathCanvas.getContext('2d');
+      const chart = document.getElementById('glb-chart');
+      const cctx = chart.getContext('2d');
+      const speedInput = document.getElementById('glb-speed');
+      const speedVal = document.getElementById('glb-speed-val');
+      const playBtn = document.getElementById('glb-play');
+      const pauseBtn = document.getElementById('glb-pause');
+      const resetBtn = document.getElementById('glb-reset');
+      let v = parseFloat(speedInput.value); let play=false; let t=0; let lastTime=null; let positions=[]; let pathPoints=[];
+      speedInput.addEventListener('input', ()=>{ v = parseFloat(speedInput.value); speedVal.textContent = v.toFixed(1)+ ' m/s'; });
+      playBtn.addEventListener('click', ()=>{ if(!play){ play=true; lastTime=null; requestAnimationFrame(loop); }});
+      pauseBtn.addEventListener('click', ()=>{ play=false; lastTime=null; });
+      resetBtn.addEventListener('click', ()=>{ play=false; t=0; positions=[]; pathPoints=[]; lastTime=null; drawAll(); });
+      function drawAxes(ctx, width, height, yOffset=20, showGrid=true){ ctx.clearRect(0,0,width,height); ctx.save(); ctx.translate(0,0); ctx.strokeStyle = '#345'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(40, height - yOffset); ctx.lineTo(width-10, height - yOffset); ctx.stroke(); ctx.beginPath(); ctx.moveTo(40, 10); ctx.lineTo(40, height - yOffset); ctx.stroke(); if(showGrid){ const startX = 40; let x = startX; let meterPx = pxPerMeter; let maxMeters = Math.floor((width - startX - 20)/meterPx); ctx.fillStyle = '#445'; ctx.font = '12px monospace'; for(let m=0; m<=maxMeters; m++){ x = startX + m*meterPx; ctx.beginPath(); ctx.moveTo(x,10); ctx.lineTo(x,height - yOffset); ctx.strokeStyle = (m%5===0)?'#2f6':'#254'; ctx.lineWidth = (m%5===0)?1.2:0.6; ctx.stroke(); ctx.fillStyle = '#9fd8ff'; ctx.fillText(m + ' m', x+4, height - yOffset + 14); } } ctx.restore(); }
+      function drawScene(){ const w = scene.width; const h = scene.height; drawAxes(sctx, w, h, 30, true); const originX = 40; const baseY = h - 30; sctx.save(); sctx.translate(0,0); if(pathPoints.length>0){ sctx.beginPath(); for(let i=0;i<pathPoints.length;i++){ const px = originX + pathPoints[i]*pxPerMeter; const py = baseY; if(i===0) sctx.moveTo(px,py); else sctx.lineTo(px,py); } sctx.strokeStyle = '#7dd3fc'; sctx.lineWidth = 2; sctx.stroke(); for(let i=0;i<pathPoints.length;i++){ const px = originX + pathPoints[i]*pxPerMeter; sctx.beginPath(); sctx.arc(px, baseY, 4,0,Math.PI*2); sctx.fillStyle = '#7dd3fc'; sctx.fill(); } }
+        const sPos = (positions.length>0)? positions[positions.length-1].s : 0; const px = originX + sPos*pxPerMeter; sctx.beginPath(); sctx.arc(px, baseY, 8,0,Math.PI*2); sctx.fillStyle = '#ffec99'; sctx.fill(); sctx.strokeStyle = '#ffd27f'; sctx.lineWidth = 2; sctx.stroke(); sctx.fillStyle = '#cfeefc'; sctx.font = '13px sans-serif'; sctx.fillText('s = ' + sPos.toFixed(2) + ' m', px+12, baseY - 10); sctx.fillText('t = ' + t.toFixed(2) + ' s', px+12, baseY + 6); sctx.restore(); }
+      function drawPathCanvas(){ const w = pathCanvas.width; const h = pathCanvas.height; pctx.clearRect(0,0,w,h); pctx.strokeStyle = '#234'; pctx.lineWidth = 1; pctx.beginPath(); pctx.moveTo(20, h/2); pctx.lineTo(w-20, h/2); pctx.stroke(); const start = 20; let maxMeters = Math.floor((w-40)/pxPerMeter); pctx.fillStyle = '#afcfe9'; pctx.font = '12px monospace'; for(let m=0;m<=maxMeters;m++){ const x = start + m*pxPerMeter; pctx.beginPath(); pctx.moveTo(x, h/2 - 6); pctx.lineTo(x, h/2 + 6); pctx.stroke(); pctx.fillText(m + ' m', x-8, h/2 + 22); } if(pathPoints.length>0){ pctx.beginPath(); for(let i=0;i<pathPoints.length;i++){ const x = start + pathPoints[i]*pxPerMeter; const y = h/2; if(i===0) pctx.moveTo(x,y); else pctx.lineTo(x,y); } pctx.strokeStyle = '#7dd3fc'; pctx.lineWidth = 2; pctx.stroke(); for(let i=0;i<pathPoints.length;i++){ const x = start + pathPoints[i]*pxPerMeter; pctx.beginPath(); pctx.arc(x,h/2,4,0,Math.PI*2); pctx.fillStyle='#7dd3fc'; pctx.fill(); } } }
+      function drawChart(){ const w = chart.width; const h = chart.height; cctx.clearRect(0,0,w,h); cctx.strokeStyle = '#214'; cctx.lineWidth = 1; cctx.beginPath(); cctx.moveTo(40,10); cctx.lineTo(40,h-30); cctx.lineTo(w-10,h-30); cctx.stroke(); cctx.fillStyle = '#bfe9ff'; cctx.font = '12px monospace'; cctx.fillText('t (s)', w-50, h-12); cctx.fillText('s (m)', 6, 18); const tMax = Math.max(5, positions.length>0 ? positions[positions.length-1].t : 5); const sMax = Math.max(5, positions.reduce((m,p)=>Math.max(m,p.s),0)); const plotLeft = 40, plotTop = 10, plotRight = w-10, plotBottom = h-30; const plotW = plotRight - plotLeft, plotH = plotBottom - plotTop; cctx.strokeStyle = '#163'; cctx.lineWidth = 0.6; for(let ti=0; ti<=Math.ceil(tMax); ti++){ const x = plotLeft + (ti/tMax)*plotW; cctx.beginPath(); cctx.moveTo(x, plotTop); cctx.lineTo(x, plotBottom); cctx.stroke(); cctx.fillStyle='#9fd8ff'; cctx.fillText(ti + ' s', x-8, plotBottom+18); } for(let si=0; si<=Math.ceil(sMax); si++){ const y = plotBottom - (si/sMax)*plotH; cctx.beginPath(); cctx.moveTo(plotLeft, y); cctx.lineTo(plotRight, y); cctx.stroke(); cctx.fillStyle='#9fd8ff'; cctx.fillText(si + ' m', 4, y+4); } if(positions.length>0){ cctx.beginPath(); for(let i=0;i<positions.length;i++){ const px = plotLeft + (positions[i].t / tMax) * plotW; const py = plotBottom - (positions[i].s / sMax) * plotH; if(i===0) cctx.moveTo(px,py); else cctx.lineTo(px,py); } cctx.strokeStyle = '#ffd27f'; cctx.lineWidth = 2; cctx.stroke(); for(let i=0;i<positions.length;i++){ const px = plotLeft + (positions[i].t / tMax) * plotW; const py = plotBottom - (positions[i].s / sMax) * plotH; cctx.beginPath(); cctx.arc(px,py,3,0,Math.PI*2); cctx.fillStyle='#ffec99'; cctx.fill(); } } }
+      function drawAll(){ drawScene(); drawPathCanvas(); drawChart(); }
+      function loop(timestamp){ if(!play) return; if(lastTime===null) lastTime = timestamp; const dtMs = timestamp - lastTime; lastTime = timestamp; const dt = dtMs/1000; t += dt; const sNow = v * t; positions.push({t: t, s: sNow}); if(pathPoints.length===0 || t - pathPoints[pathPoints.length-1] >= 0.48){ pathPoints.push(sNow); } if(positions.length>600) positions.shift(); if(pathPoints.length>200) pathPoints.shift(); drawAll(); requestAnimationFrame(loop); }
+      drawAll();
+    })();
 
-    // Add AR button if possible (ARButton provided by examples/js/webxr/ARButton.js as global ARButton)
-    try {
-      document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
-    } catch (err) {
-      // If ARButton isn't available or fails, show a message and continue in non-AR mode
-      console.warn('ARButton error:', err);
-      document.getElementById('msg').textContent = 'AR tidak tersedia pada perangkat ini — menampilkan viewer 3D saja.';
-    }
+    // GLBB
+    (function(){
+      const pxPerMeter = 60;
+      const scene = document.getElementById('glbb-scene');
+      const sctx = scene.getContext('2d');
+      const chartV = document.getElementById('glbb-chart-v');
+      const vctx = chartV.getContext('2d');
+      const chartS = document.getElementById('glbb-chart-s');
+      const sChartCtx = chartS.getContext('2d');
+      const v0Input = document.getElementById('glbb-v0');
+      const v0Val = document.getElementById('glbb-v0-val');
+      const accInput = document.getElementById('glbb-acc');
+      const accVal = document.getElementById('glbb-acc-val');
+      const playBtn = document.getElementById('glbb-play');
+      const pauseBtn = document.getElementById('glbb-pause');
+      const resetBtn = document.getElementById('glbb-reset');
+      let v0 = parseFloat(v0Input.value); let a = parseFloat(accInput.value); let play=false; let t=0; let lastTime=null; let data=[];
+      v0Input.addEventListener('input', ()=>{ v0 = parseFloat(v0Input.value); v0Val.textContent = v0.toFixed(1)+ ' m/s'; });
+      accInput.addEventListener('input', ()=>{ a = parseFloat(accInput.value); accVal.textContent = a.toFixed(1)+ ' m/s²'; });
+      playBtn.addEventListener('click', ()=>{ if(!play){ play=true; lastTime=null; requestAnimationFrame(loop); }});
+      pauseBtn.addEventListener('click', ()=>{ play=false; lastTime=null; });
+      resetBtn.addEventListener('click', ()=>{ play=false; t=0; data=[]; lastTime=null; drawAll(); });
+      function drawScene(){ const w = scene.width; const h = scene.height; sctx.clearRect(0,0,w,h); const originX = 40, baseY = h-30; sctx.strokeStyle = '#345'; sctx.beginPath(); sctx.moveTo(originX, baseY); sctx.lineTo(w-10, baseY); sctx.stroke(); if(data.length>0){ const sNow = data[data.length-1].s; const px = originX + sNow*pxPerMeter; sctx.beginPath(); sctx.arc(px, baseY, 8,0,Math.PI*2); sctx.fillStyle = '#ffec99'; sctx.fill(); sctx.strokeStyle = '#ffd27f'; sctx.stroke(); sctx.fillStyle = '#cfeefc'; sctx.fillText('s='+sNow.toFixed(2)+' m', px+12, baseY-10); sctx.fillText('t='+t.toFixed(2)+' s', px+12, baseY+6); } }
+      function drawChartV(){ const w = chartV.width, h = chartV.height; vctx.clearRect(0,0,w,h); vctx.strokeStyle = '#214'; vctx.beginPath(); vctx.moveTo(40,10); vctx.lineTo(40,h-30); vctx.lineTo(w-10,h-30); vctx.stroke(); vctx.fillStyle = '#bfe9ff'; vctx.fillText('t (s)', w-50,h-12); vctx.fillText('v (m/s)', 6,18); if(data.length>0){ const tMax = Math.max(5, data[data.length-1].t); const vMax = Math.max(5, ...data.map(d=>d.v)); const plotLeft=40, plotBottom=h-30, plotRight=w-10, plotTop=10; const plotW=plotRight-plotLeft, plotH=plotBottom-plotTop; vctx.beginPath(); data.forEach((d,i)=>{ const x = plotLeft + (d.t/tMax)*plotW; const y = plotBottom - (d.v/vMax)*plotH; if(i===0) vctx.moveTo(x,y); else vctx.lineTo(x,y); }); vctx.strokeStyle='#7dd3fc'; vctx.lineWidth=2; vctx.stroke(); } }
+      function drawChartS(){ const w = chartS.width, h = chartS.height; sChartCtx.clearRect(0,0,w,h); sChartCtx.strokeStyle = '#214'; sChartCtx.beginPath(); sChartCtx.moveTo(40,10); sChartCtx.lineTo(40,h-30); sChartCtx.lineTo(w-10,h-30); sChartCtx.stroke(); sChartCtx.fillStyle = '#bfe9ff'; sChartCtx.fillText('t (s)', w-50,h-12); sChartCtx.fillText('s (m)', 6,18); if(data.length>0){ const tMax = Math.max(5, data[data.length-1].t); const sMax = Math.max(5, ...data.map(d=>d.s)); const plotLeft=40, plotBottom=h-30, plotRight=w-10, plotTop=10; const plotW=plotRight-plotLeft, plotH=plotBottom-plotTop; sChartCtx.beginPath(); data.forEach((d,i)=>{ const x = plotLeft + (d.t/tMax)*plotW; const y = plotBottom - (d.s/sMax)*plotH; if(i===0) sChartCtx.moveTo(x,y); else sChartCtx.lineTo(x,y); }); sChartCtx.strokeStyle='#ffd27f'; sChartCtx.lineWidth=2; sChartCtx.stroke(); } }
+      function drawAll(){ drawScene(); drawChartV(); drawChartS(); }
+      function loop(timestamp){ if(!play) return; if(lastTime===null) lastTime=timestamp; const dt=(timestamp-lastTime)/1000; lastTime=timestamp; t+=dt; const v=v0+a*t; const s=v0*t+0.5*a*t*t; data.push({t,v,s}); if(data.length>600) data.shift(); drawAll(); requestAnimationFrame(loop); }
+      drawAll();
+    })();
 
-    // Lighting
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-    scene.add(hemi);
-    const dir = new THREE.DirectionalLight(0xffffff, 0.6);
-    dir.position.set(5, 10, 7); scene.add(dir);
+    // Parabola
+    (function(){
+      const pxPerMeter = 15; const scene = document.getElementById('par-scene'); const sctx = scene.getContext('2d'); const v0Input = document.getElementById('par-v0'); const v0Val = document.getElementById('par-v0-val'); const angleInput = document.getElementById('par-angle'); const angleVal = document.getElementById('par-angle-val'); const gravInput = document.getElementById('par-grav'); const gravVal = document.getElementById('par-grav-val'); const playBtn = document.getElementById('par-play'); const pauseBtn = document.getElementById('par-pause'); const resetBtn = document.getElementById('par-reset'); let v0 = parseFloat(v0Input.value); let angle = parseFloat(angleInput.value) * Math.PI/180; let g = parseFloat(gravInput.value); let play=false; let t=0; let lastTime=null; let data=[]; v0Input.addEventListener('input', ()=>{ v0 = parseFloat(v0Input.value); v0Val.textContent = v0+' m/s'; }); angleInput.addEventListener('input', ()=>{ angle = parseFloat(angleInput.value)*Math.PI/180; angleVal.textContent = angleInput.value+'°'; }); gravInput.addEventListener('input', ()=>{ g = parseFloat(gravInput.value); gravVal.textContent = g.toFixed(1)+' m/s²'; }); playBtn.addEventListener('click', ()=>{ if(!play){ play=true; lastTime=null; requestAnimationFrame(loop); }}); pauseBtn.addEventListener('click', ()=>{ play=false; lastTime=null; }); resetBtn.addEventListener('click', ()=>{ play=false; t=0; data=[]; lastTime=null; drawScene(); }); function drawScene(){ const w = scene.width; const h = scene.height; sctx.clearRect(0,0,w,h); const originX = 40, baseY = h-30; sctx.strokeStyle = '#345'; sctx.beginPath(); sctx.moveTo(originX, baseY); sctx.lineTo(w-10, baseY); sctx.moveTo(originX, baseY); sctx.lineTo(originX, 10); sctx.stroke(); if(data.length>1){ sctx.beginPath(); data.forEach((d,i)=>{ const x = originX + d.x*pxPerMeter; const y = baseY - d.y*pxPerMeter; if(i===0) sctx.moveTo(x,y); else sctx.lineTo(x,y); }); sctx.strokeStyle='#7dd3fc'; sctx.lineWidth=2; sctx.stroke(); } if(data.length>0){ const d = data[data.length-1]; const px = originX + d.x*pxPerMeter; const py = baseY - d.y*pxPerMeter; sctx.beginPath(); sctx.arc(px,py,8,0,Math.PI*2); sctx.fillStyle = '#ffec99'; sctx.fill(); sctx.strokeStyle = '#ffd27f'; sctx.stroke(); sctx.fillStyle = '#cfeefc'; sctx.fillText(`t=${d.t.toFixed(2)}s`, px+12, py-20); sctx.fillText(`x=${d.x.toFixed(2)}m`, px+12, py-8); sctx.fillText(`y=${d.y.toFixed(2)}m`, px+12, py+6); } }
+      function loop(timestamp){ if(!play) return; if(lastTime===null) lastTime=timestamp; const dt=(timestamp-lastTime)/1000; lastTime=timestamp; t+=dt; const vx = v0*Math.cos(angle); const vy = v0*Math.sin(angle); const x = vx*t; const y = vy*t - 0.5*g*t*t; if(y>=0){ data.push({t,x,y}); if(data.length>1000) data.shift(); drawScene(); requestAnimationFrame(loop); } else { play=false; } }
+      drawScene();
+    })();
 
-    // Grid (faint)
-    const grid = new THREE.GridHelper(40, 40, 0x123044, 0x09121a);
-    grid.position.y = -2; scene.add(grid);
-
-    // Atom model (same as your non-AR model)
-    const params = { speed: 1, nucleusScale: 1, trail: false };
-    const nucleusGroup = new THREE.Group(); scene.add(nucleusGroup);
-    const electronsGroup = new THREE.Group(); scene.add(electronsGroup);
-    const orbitsGroup = new THREE.Group(); scene.add(orbitsGroup);
-
-    const protonMat = new THREE.MeshStandardMaterial({ color: 0xff6666, metalness: 0.2, roughness: 0.6 });
-    const neutronMat = new THREE.MeshStandardMaterial({ color: 0x9999ff, metalness: 0.2, roughness: 0.6 });
-    const electronMat = new THREE.MeshStandardMaterial({ color: 0x7dd3fc, emissive: 0x003b4d });
-    const orbitMat = new THREE.LineBasicMaterial({ color: 0x3a6f88, linewidth: 1, opacity: 0.6, transparent: true });
-
-    function buildSimpleAtom(){
-      // clear groups
-      while(nucleusGroup.children.length) nucleusGroup.remove(nucleusGroup.children[0]);
-      while(electronsGroup.children.length) electronsGroup.remove(electronsGroup.children[0]);
-      while(orbitsGroup.children.length) orbitsGroup.remove(orbitsGroup.children[0]);
-
-      // nucleus - a small visual core
-      const core = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), new THREE.MeshStandardMaterial({ color: 0xff4444 }));
-      nucleusGroup.add(core);
-
-      // simple electron set
-      const shellRadii = [0.9, 1.6];
-      for (let s = 0; s < 2; s++){
-        const r = shellRadii[s];
-        const curve = new THREE.EllipseCurve(0,0,r,r,0,Math.PI*2,false,0);
-        const points = curve.getPoints(64).map(p => new THREE.Vector3(p.x, 0, p.y));
-        const geo = new THREE.BufferGeometry().setFromPoints(points);
-        const orbitLine = new THREE.LineLoop(geo, orbitMat); orbitLine.rotation.x = Math.PI/2; orbitsGroup.add(orbitLine);
-
-        const count = (s===0)?2:4;
-        for(let i=0;i<count;i++){
-          const theta = (i/count)*Math.PI*2;
-          const e = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 12), electronMat);
-          e.userData = { angle: theta, radius: r, speed: 0.6 + 0.4*s };
-          e.position.set(r*Math.cos(theta), 0, r*Math.sin(theta));
-          electronsGroup.add(e);
-        }
-      }
-    }
-    buildSimpleAtom();
-
-    // Add OrbitControls for non-AR interaction (these scripts attach OrbitControls to THREE namespace)
-    let controls;
-    try {
-      controls = new THREE.OrbitControls(camera, renderer.domElement);
-      camera.position.set(0, 1.6, 3);
-      controls.update();
-    } catch (err) {
-      console.warn('OrbitControls not available', err);
-    }
-
-    // AR hit-test / reticle
-    let hitTestSource = null;
-    let hitTestSourceRequested = false;
-    const reticleGeo = new THREE.RingGeometry(0.12, 0.15, 32);
-    reticleGeo.rotateX(-Math.PI / 2);
-    const reticleMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
-    const reticle = new THREE.Mesh(reticleGeo, reticleMat);
-    reticle.matrixAutoUpdate = false;
-    reticle.visible = false;
-    scene.add(reticle);
-
-    // Animation loop
-    function animate(){
-      renderer.setAnimationLoop(render);
-    }
-
-    function render(timestamp, frame){
-      // animate electrons
-      electronsGroup.children.forEach(function(el){
-        el.userData.angle += 0.01 * params.speed;
-        const r = el.userData.radius;
-        el.position.set(r * Math.cos(el.userData.angle), 0, r * Math.sin(el.userData.angle));
-      });
-
-      // AR hit-test: only when in XR session and frame available
-      if(frame){
-        const session = renderer.xr.getSession();
-        const referenceSpace = renderer.xr.getReferenceSpace();
-
-        if(!hitTestSourceRequested){
-          // request a hit test source for viewer
-          session.requestReferenceSpace('viewer').then(function(viewerRef){
-            session.requestHitTestSource({ space: viewerRef }).then(function(source){
-              hitTestSource = source;
-            });
-          });
-
-          session.addEventListener('end', function(){
-            hitTestSourceRequested = false;
-            hitTestSource = null;
-            reticle.visible = false;
-          });
-
-          hitTestSourceRequested = true;
-        }
-
-        if(hitTestSource){
-          const hitTestResults = frame.getHitTestResults(hitTestSource);
-          if(hitTestResults.length > 0){
-            const hit = hitTestResults[0];
-            const pose = hit.getPose(referenceSpace);
-            reticle.visible = true;
-            reticle.matrix.fromArray(pose.transform.matrix);
-          } else {
-            reticle.visible = false;
-          }
-        }
-      }
-
-      renderer.render(scene, camera);
-    }
-
-    // Start animation
-    animate();
-
-    // Place atom on tap (or mouse click) when reticle visible
-    window.addEventListener('click', function(){
-      if(reticle.visible){
-        const pos = new THREE.Vector3();
-        pos.setFromMatrixPosition(reticle.matrix);
-        // move entire atom groups to reticle
-        nucleusGroup.position.copy(pos);
-        electronsGroup.position.copy(pos);
-        orbitsGroup.position.copy(pos);
-        document.getElementById('msg').textContent = 'Model ditempatkan.';
-      }
-    });
-
-    // Reset camera for non-AR mode
-    document.getElementById('resetBtn').addEventListener('click', function(){
-      if(controls){ controls.reset(); }
-      camera.position.set(0,1.6,3);
-      document.getElementById('msg').textContent = 'Kamera direset.';
-    });
-
-    // Resize
-    window.addEventListener('resize', function(){
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    // Feature detection message
-    if(navigator.xr){
-      navigator.xr.isSessionSupported('immersive-ar').then(function(supported){
-        if(supported) document.getElementById('msg').textContent = 'Perangkat mendukung WebXR AR — ketuk Enter AR untuk mulai.';
-        else document.getElementById('msg').textContent = 'Perangkat tidak mendukung WebXR AR. Mode 3D biasa aktif.';
-      }).catch(()=>{ document.getElementById('msg').textContent = 'Tidak dapat memeriksa dukungan WebXR.'; });
-    } else {
-      document.getElementById('msg').textContent = 'WebXR tidak tersedia — gunakan mode 3D biasa.';
-    }
   </script>
 </body>
 </html>
